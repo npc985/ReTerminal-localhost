@@ -1,29 +1,29 @@
-# Looking for contributors
-I currently don't have enough time to actively maintain ReTerminal.
-If you're interested in keeping the project alive, contributions are very welcome!
+[English](README.en.md) | **简体中文**
 
-
+# 招募贡献者
+我目前没有足够时间主动维护 ReTerminal。
+如果你有兴趣让这个项目继续发展，非常欢迎贡献！
 
 # ReTerminal
-**ReTerminal** is a sleek, Material 3-inspired terminal emulator designed as a modern alternative to the legacy [Jackpal Terminal](https://github.com/jackpal/Android-Terminal-Emulator). Built on [Termux's](https://github.com/termux/termux-app) robust TerminalView
+**ReTerminal** 是一款简洁、受 Material 3 启发的终端模拟器，旨在作为旧版 [Jackpal Terminal](https://github.com/jackpal/Android-Terminal-Emulator) 的现代替代方案。它基于 [Termux](https://github.com/termux/termux-app) 强大的 TerminalView 构建。
 
-Download the latest APK from the [Releases Section](https://github.com/RohitKushvaha01/ReTerminal/releases/latest).
+从 [Releases 区域](https://github.com/RohitKushvaha01/ReTerminal/releases/latest) 下载最新 APK。
 
-# Features
-- [x] Basic Terminal
-- [x] Virtual Keys
-- [x] Multiple Sessions
-- [x] Alpine Linux support
-- [x] Configurable Keyboard Shortcuts (Paste, Session Management)
+# 功能
+- [x] 基础终端
+- [x] 虚拟按键
+- [x] 多会话
+- [x] Alpine Linux 支持
+- [x] 可配置键盘快捷键（粘贴、会话管理）
 
-# Screenshots
+# 截图
 <div>
   <img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="32%" />
   <img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/02.jpg" width="32%" />
   <img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/03.jpg" width="32%" />
 </div>
 
-## Community
+## 社区
 > [!TIP]
-Join the reTerminal community to stay updated and engage with other users:
+加入 reTerminal 社区，获取最新动态并与其他用户互动：
 - [Telegram](https://t.me/reTerminal)
