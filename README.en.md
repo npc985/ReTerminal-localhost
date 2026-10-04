@@ -1,3 +1,4 @@
+**English** | [简体中文](README.md)
 # Looking for contributors
 I currently don't have enough time to actively maintain ReTerminal.
 If you're interested in keeping the project alive, contributions are very welcome!
