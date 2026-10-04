@@ -1,8 +1,5 @@
 [English](README.en.md) | **简体中文**
 
-# 招募贡献者
-我目前没有足够时间主动维护 ReTerminal。
-如果你有兴趣让这个项目继续发展，非常欢迎贡献！
 
 # ReTerminal
 **ReTerminal** 是一款简洁、受 Material 3 启发的终端模拟器，旨在作为旧版 [Jackpal Terminal](https://github.com/jackpal/Android-Terminal-Emulator) 的现代替代方案。它基于 [Termux](https://github.com/termux/termux-app) 强大的 TerminalView 构建。
