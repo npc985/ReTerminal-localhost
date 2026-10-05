@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">回环端末</string>
     <string name="settings">设置</string>
     <string name="use_shizuku">自动登录 Shizuku</string>
     <string name="use_shizuku_desc">自动执行 rish 命令</string>
