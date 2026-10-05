@@ -199,7 +199,7 @@ private fun AddSessionDialog(
     onDismiss: () -> Unit,
     onCreateSession: (Int) -> Unit,
     onCreateCustomSession: (CustomSession) -> Unit,
-    onCreateSshAlpineSession: () -> Unit // <--- 加上这一行
+    onCreateSshAlpineSession: () -> Unit
 ) {
     val customSessions = remember { CustomSessions.getAll() }
     BasicAlertDialog(onDismissRequest = onDismiss) {
@@ -210,20 +210,18 @@ private fun AddSessionDialog(
                 onClick = { onCreateSession(WorkingMode.ALPINE) }
             )
             
-            // 你之前加的那个按钮在哪，把它的 onClick 改成：
             SettingsCard(
                 title = { Text("SSH-Alpine") },
                 description = { Text("执行 exec ssh root@127.0.0.1 -p 22") },
-                onClick = { onCreateSshAlpineSession() } // <--- 改为调用这个新回调
+                onClick = { onCreateSshAlpineSession() }
             )
-) 
-    }
-)
+
             SettingsCard(
                 title = { Text("Android") },
                 description = { Text(stringResource(strings.android_desc)) },
                 onClick = { onCreateSession(WorkingMode.ANDROID) }
             )
+            
             customSessions.forEach { session ->
                 SettingsCard(
                     title = { Text(session.name) },

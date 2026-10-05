@@ -180,7 +180,7 @@ object MkSession {
         )
     }
 
-    fun buildScriptPendingCommand(
+       fun buildScriptPendingCommand(
         context: Context,
         script: File,
         workingMode: Int,
@@ -229,37 +229,34 @@ object MkSession {
                 env = null
             )
         }
+    } // <--- 注意这里多了一个大括号，结束上一个函数
+
     fun buildSshAlpinePendingCommand(context: Context): PendingCommand {
-    // 配置文件路径：放在 /sdcard/ReTerminal/ssh_alpine.conf
-    // 你可以通过任何文本编辑器或终端创建这个文件
-    val configFile = File("/sdcard/ReTerminal/ssh_alpine.conf")
-    
-    var ip = "127.0.0.1"
-    var port = "22"
-    var user = "root"
+        val configFile = File("/sdcard/ReTerminal/ssh_alpine.conf")
+        
+        var ip = "127.0.0.1"
+        var port = "22"
+        var user = "root"
 
-    // 如果配置文件存在，则读取并解析
-    if (configFile.exists()) {
-        configFile.readLines().forEach { line ->
-            val trimmed = line.trim()
-            if (trimmed.startsWith("ip=")) ip = trimmed.substringAfter("=").trim()
-            if (trimmed.startsWith("port=")) port = trimmed.substringAfter("=").trim()
-            if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
+        if (configFile.exists()) {
+            configFile.readLines().forEach { line ->
+                val trimmed = line.trim()
+                if (trimmed.startsWith("ip=")) ip = trimmed.substringAfter("=").trim()
+                if (trimmed.startsWith("port=")) port = trimmed.substringAfter("=").trim()
+                if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
+            }
         }
-    }
 
-    val sshCommand = "exec ssh $user@$ip -p $port"
+        val sshCommand = "exec ssh $user@$ip -p $port"
 
-    return PendingCommand(
-        shell = "/system/bin/sh",
-        // 工作目录避开 /sdcard 的 noexec 限制，使用应用私有目录
-        args = arrayOf("-c", sshCommand),
-        workingDir = context.filesDir.absolutePath, 
-        env = null
-    )
-}
+        return PendingCommand(
+            shell = "/system/bin/sh",
+            args = arrayOf("-c", sshCommand),
+            workingDir = context.filesDir.absolutePath, 
+            env = null
+        )
     }
-}
+} // <--- 注意这里多了一个大括号，结束 object MkSession
 
 data class PendingCommand(
     val shell: String,
