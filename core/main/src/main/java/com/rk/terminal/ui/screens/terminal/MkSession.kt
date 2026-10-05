@@ -232,30 +232,41 @@ object MkSession {
     } // <--- 注意这里多了一个大括号，结束上一个函数
 
     fun buildSshAlpinePendingCommand(context: Context): PendingCommand {
-        val configFile = File("/sdcard/ReTerminal/ssh_alpine.conf")
-        
-        var ip = "127.0.0.1"
-        var port = "22"
-        var user = "root"
-
-        if (configFile.exists()) {
-            configFile.readLines().forEach { line ->
-                val trimmed = line.trim()
-                if (trimmed.startsWith("ip=")) ip = trimmed.substringAfter("=").trim()
-                if (trimmed.startsWith("port=")) port = trimmed.substringAfter("=").trim()
-                if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
-            }
-        }
-
-        val sshCommand = "exec ssh $user@$ip -p $port"
-
-        return PendingCommand(
-            shell = "/system/bin/sh",
-            args = arrayOf("-c", sshCommand),
-            workingDir = context.filesDir.absolutePath, 
-            env = null
-        )
+    // 1. 定义目录和文件
+    val configDir = File("/sdcard/ReTerminal")
+    val configFile = File(configDir, "ssh_alpine.conf")
+    
+    // 2. 如果目录不存在，创建目录
+    if (!configDir.exists()) {
+        configDir.mkdirs()
     }
+
+    // 3. 如果配置文件不存在，自动生成默认文件（之前遗漏了这一步）
+    if (!configFile.exists()) {
+        configFile.writeText("ip=127.0.0.1\nport=22\nuser=root\n")
+    }
+
+    // 4. 读取配置
+    var ip = "127.0.0.1"
+    var port = "22"
+    var user = "root"
+    configFile.readLines().forEach { line ->
+        val trimmed = line.trim()
+        if (trimmed.startsWith("ip=")) ip = trimmed.substringAfter("=").trim()
+        if (trimmed.startsWith("port=")) port = trimmed.substringAfter("=").trim()
+        if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
+    }
+
+    // 5. 将命令写入一个专属的脚本文件，避开 -c 的解析 bug
+    val scriptFile = File(context.filesDir, "ssh_alpine.sh")
+    scriptFile.writeText("exec ssh $user@$ip -p $port\n")
+
+    return PendingCommand(
+        shell = "/system/bin/sh",
+        args = arrayOf(scriptFile.absolutePath), // 直接传脚本路径，不传 -c
+        workingDir = context.filesDir.absolutePath, 
+        env = null
+    )
 } // <--- 注意这里多了一个大括号，结束 object MkSession
 
 data class PendingCommand(
