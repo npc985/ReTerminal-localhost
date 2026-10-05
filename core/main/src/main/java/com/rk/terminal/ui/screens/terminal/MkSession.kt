@@ -180,7 +180,7 @@ object MkSession {
         )
     }
 
-       fun buildScriptPendingCommand(
+    fun buildScriptPendingCommand(
         context: Context,
         script: File,
         workingMode: Int,
@@ -229,71 +229,24 @@ object MkSession {
                 env = null
             )
         }
-    } // <--- 注意这里多了一个大括号，结束上一个函数
-
-        fun buildScriptPendingCommand(
-        context: Context,
-        script: File,
-        workingMode: Int,
-        custom: CustomSession? = null
-    ): PendingCommand {
-        val workingDir = script.parentFile?.absolutePath
-        return if (custom != null) {
-            val sysSh = File("/system/bin/sh")
-            if (sysSh.canExecute()) {
-                PendingCommand(
-                    shell = sysSh.absolutePath,
-                    args = arrayOf("-c", "'${custom.shellPath}' '${script.absolutePath}'"),
-                    workingDir = workingDir,
-                    env = null
-                )
-            } else {
-                val proot = "${context.applicationInfo.nativeLibraryDir}/libproot.so"
-                PendingCommand(
-                    shell = proot,
-                    args = arrayOf(
-                        "-r", "/",
-                        "-b", "/dev",
-                        "-b", "/proc",
-                        "-b", "/sdcard",
-                        "-0",
-                        "sh", custom.shellPath, script.absolutePath
-                    ),
-                    workingDir = workingDir,
-                    env = null
-                )
-            }
-        } else if (workingMode == WorkingMode.ALPINE) {
-            val initFile = context.localBinDir()
-                .child(if (Rootfs.execMode.value == ExecMode.CHROOT) "init-host-chroot" else "init-host")
-            PendingCommand(
-                shell = "/system/bin/sh",
-                args = arrayOf("-c", initFile.absolutePath, "sh", script.absolutePath),
-                workingDir = workingDir,
-                env = null
-            )
-        } else {
-            PendingCommand(
-                shell = "/system/bin/sh",
-                args = arrayOf("-c", script.absolutePath),
-                workingDir = workingDir,
-                env = null
-            )
-        }
     }
 
     fun buildSshAlpinePendingCommand(context: Context): PendingCommand {
+        // 1. 定义目录和文件
         val configDir = File("/sdcard/ReTerminal")
         val configFile = File(configDir, "ssh_alpine.conf")
         
+        // 2. 如果目录不存在，创建目录
         if (!configDir.exists()) {
             configDir.mkdirs()
         }
 
+        // 3. 如果配置文件不存在，自动生成默认文件
         if (!configFile.exists()) {
             configFile.writeText("ip=127.0.0.1\nport=22\nuser=root\n")
         }
 
+        // 4. 读取配置
         var ip = "127.0.0.1"
         var port = "22"
         var user = "root"
@@ -304,6 +257,7 @@ object MkSession {
             if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
         }
 
+        // 5. 将命令写入一个专属的脚本文件，避开 -c 的解析 bug
         val scriptFile = File(context.filesDir, "ssh_alpine.sh")
         scriptFile.writeText("exec ssh $user@$ip -p $port\n")
 
