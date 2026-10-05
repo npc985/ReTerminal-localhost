@@ -104,6 +104,18 @@ fun TerminalScreen(
                 sessionBinder.createSession(custom.name, client, WorkingMode.ALPINE, pendingCommand)
                 terminalViewModel.changeSession(context, sessionBinder, custom.name)
                 showAddDialog = false
+            },
+            onCreateSshAlpineSession = { // <--- 新增这个块
+                val sessionId = generateUniqueSessionId(sessionBinder.getService().sessionList.keys.toList())
+                val terminal = terminalViewModel.terminalView ?: return@AddSessionDialog
+                val client = TerminalBackEnd(terminal, mainActivity)
+                
+                // 调用我们在 MkSession.kt 写好的动态读取配置文件函数
+                val pendingCommand = MkSession.buildSshAlpinePendingCommand(context)
+                
+                sessionBinder.createSession(sessionId, client, WorkingMode.ALPINE, pendingCommand)
+                terminalViewModel.changeSession(context, sessionBinder, sessionId)
+                showAddDialog = false
             }
         )
     }
@@ -186,7 +198,8 @@ private fun BackgroundImage(viewModel: TerminalViewModel) {
 private fun AddSessionDialog(
     onDismiss: () -> Unit,
     onCreateSession: (Int) -> Unit,
-    onCreateCustomSession: (CustomSession) -> Unit
+    onCreateCustomSession: (CustomSession) -> Unit,
+    onCreateSshAlpineSession: () -> Unit // <--- 加上这一行
 ) {
     val customSessions = remember { CustomSessions.getAll() }
     BasicAlertDialog(onDismissRequest = onDismiss) {
@@ -196,6 +209,16 @@ private fun AddSessionDialog(
                 description = { Text(stringResource(strings.alpine_desc)) },
                 onClick = { onCreateSession(WorkingMode.ALPINE) }
             )
+            
+            // 你之前加的那个按钮在哪，把它的 onClick 改成：
+            SettingsCard(
+                title = { Text("SSH-Alpine") },
+                description = { Text("执行 exec ssh root@127.0.0.1 -p 22") },
+                onClick = { onCreateSshAlpineSession() } // <--- 改为调用这个新回调
+            )
+) 
+    }
+)
             SettingsCard(
                 title = { Text("Android") },
                 description = { Text(stringResource(strings.android_desc)) },

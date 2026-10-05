@@ -1,5 +1,5 @@
 #!/bin/sh
-SU="/system/bin/su"
+SU="su"
 ALPINE_DIR=$PREFIX/local/alpine
 
 mkdir -p $ALPINE_DIR
