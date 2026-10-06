@@ -154,6 +154,24 @@ object Settings {
         get() = Preference.getBoolean(key = "shortcuts_enabled", default = true)
         set(value) = Preference.setBoolean(key = "shortcuts_enabled", value)
 
+    // ================ 新增 SSH-Alpine 专属配置 ================
+    var ssh_ip
+        get() = Preference.getString(key = "ssh_ip", default = "127.0.0.1")
+        set(value) = Preference.setString(key = "ssh_ip", value)
+
+    var ssh_port
+        get() = Preference.getString(key = "ssh_port", default = "22")
+        set(value) = Preference.setString(key = "ssh_port", value)
+
+    var ssh_user
+        get() = Preference.getString(key = "ssh_user", default = "root")
+        set(value) = Preference.setString(key = "ssh_user", value)
+
+    var ssh_password
+        get() = Preference.getString(key = "ssh_password", default = "")
+        set(value) = Preference.setString(key = "ssh_password", value)
+    // ==========================================================
+
     const val default_virtual_keys = "[" +
         "\n  [\"ESC\", {\"key\": \"/\", \"popup\": \"\\\\\"}, {\"key\": \"-\", \"popup\": \"|\"}, \"HOME\", \"UP\", \"END\", \"PGUP\"]," +
         "\n  [\"TAB\", \"CTRL\", \"ALT\", \"LEFT\", \"DOWN\", \"RIGHT\", \"PGDN\"]" +
@@ -171,9 +189,6 @@ object Settings {
     fun setShortcutBinding(action: com.rk.terminal.ui.screens.terminal.ShortcutAction, binding: com.rk.terminal.ui.screens.terminal.ShortcutBinding) {
         Preference.setString(key = action.prefKey, value = binding.serialize())
     }
-
-
-
 }
 
 object Preference {
@@ -327,9 +342,7 @@ object Preference {
             val editor = sharedPreferences.edit()
             editor.putFloat(key,value)
             editor.apply()
-        }.onFailure {
-            it.printStackTrace()
-        }
+        }.onFailure { it.printStackTrace() }
     }
 
 }

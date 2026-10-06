@@ -104,7 +104,7 @@ fun Settings(
     var defaultIsCustom by remember { mutableStateOf(Settings.default_is_custom) }
     var defaultCustomId by remember { mutableStateOf(CustomSessions.getDefaultId()) }
 
-    // 新增：用于控制 SSH 弹窗的显示
+    // 控制 SSH 弹窗的显示
     var showSshConfigDialog by remember { mutableStateOf(false) }
 
     PreferenceLayout(
@@ -212,7 +212,7 @@ fun Settings(
             }
         }
 
-        // 新增：SSH-Alpine 连接配置入口
+        // SSH-Alpine 连接配置入口
         PreferenceGroup(heading = "SSH-Alpine 连接配置") {
             SettingsCard(
                 title = { Text("配置 SSH 连接参数") },
@@ -309,7 +309,7 @@ fun Settings(
         )
     }
 
-    // 新增：SSH 配置弹窗的调用
+    // SSH 配置弹窗的调用
     if (showSshConfigDialog) {
         SshConfigDialog(
             onDismiss = { showSshConfigDialog = false },
@@ -324,7 +324,6 @@ fun Settings(
     }
 }
 
-// ================= 新增：SSH 配置的弹窗组件 =================
 @Composable
 fun SshConfigDialog(
     onDismiss: () -> Unit,
@@ -367,7 +366,7 @@ fun SshConfigDialog(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("密码 (留空则无密码)") },
-                    visualTransformation = PasswordVisualTransformation(), // 隐藏密码
+                    visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -375,14 +374,79 @@ fun SshConfigDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                // 简单校验，防止极端情况导致脚本崩溃
                 if (ip.isNotBlank() && port.isNotBlank() && user.isNotBlank()) {
-                    onSave(ip.trim(), port.trim(), user.trim(), password) // 密码不trim，保留原样
+                    onSave(ip.trim(), port.trim(), user.trim(), password)
                 }
             }) { Text("保存") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("取消") }
         }
+    )
+}
+
+// ================= 补回被漏掉的辅助函数 =================
+
+@Composable
+private fun WorkingModeOption(title: String, description: String, selected: Boolean, onSelect: () -> Unit) {
+    SettingsCard(
+        title = { Text(title) },
+        description = { Text(description) },
+        startWidget = {
+            RadioButton(
+                modifier = Modifier.padding(start = 8.dp),
+                selected = selected,
+                onClick = onSelect
+            )
+        },
+        onClick = onSelect
+    )
+}
+
+@Composable
+private fun InputModeOption(title: String, description: String, mode: Int, currentMode: Int, onSelect: (Int) -> Unit) {
+    SettingsCard(
+        title = { Text(title) },
+        description = { Text(description) },
+        startWidget = {
+            RadioButton(
+                modifier = Modifier.padding(start = 8.dp),
+                selected = currentMode == mode,
+                onClick = { onSelect(mode) }
+            )
+        },
+        onClick = { onSelect(mode) }
+    )
+}
+
+@Composable
+private fun ExecModeOption(title: String, description: String, mode: ExecMode, currentMode: ExecMode?, onSelect: (ExecMode) -> Unit) {
+    SettingsCard(
+        title = { Text(title) },
+        description = { Text(description) },
+        startWidget = {
+            RadioButton(
+                modifier = Modifier.padding(start = 8.dp),
+                selected = currentMode == mode,
+                onClick = { onSelect(mode) }
+            )
+        },
+        onClick = { onSelect(mode) }
+    )
+}
+
+@Composable
+private fun LoginShellOption(title: String, description: String, mode: Int, currentMode: Int, onSelect: (Int) -> Unit) {
+    SettingsCard(
+        title = { Text(title) },
+        description = { Text(description) },
+        startWidget = {
+            RadioButton(
+                modifier = Modifier.padding(start = 8.dp),
+                selected = currentMode == mode,
+                onClick = { onSelect(mode) }
+            )
+        },
+        onClick = { onSelect(mode) }
     )
 }
