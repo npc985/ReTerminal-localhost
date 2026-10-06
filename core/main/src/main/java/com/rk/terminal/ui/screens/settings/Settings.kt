@@ -5,8 +5,13 @@ import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
@@ -16,6 +21,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
@@ -96,6 +103,9 @@ fun Settings(
     var showAddCustomSession by remember { mutableStateOf(false) }
     var defaultIsCustom by remember { mutableStateOf(Settings.default_is_custom) }
     var defaultCustomId by remember { mutableStateOf(CustomSessions.getDefaultId()) }
+
+    // 新增：用于控制 SSH 弹窗的显示
+    var showSshConfigDialog by remember { mutableStateOf(false) }
 
     PreferenceLayout(
         label = stringResource(strings.settings),
@@ -202,6 +212,15 @@ fun Settings(
             }
         }
 
+        // 新增：SSH-Alpine 连接配置入口
+        PreferenceGroup(heading = "SSH-Alpine 连接配置") {
+            SettingsCard(
+                title = { Text("配置 SSH 连接参数") },
+                description = { Text("当前: ${Settings.ssh_user}@${Settings.ssh_ip}:${Settings.ssh_port}") },
+                onClick = { showSshConfigDialog = true }
+            )
+        }
+
         PreferenceGroup(heading = "Custom Sessions") {
             customSessions.forEach { session ->
                 SettingsCard(
@@ -289,68 +308,81 @@ fun Settings(
             }
         )
     }
+
+    // 新增：SSH 配置弹窗的调用
+    if (showSshConfigDialog) {
+        SshConfigDialog(
+            onDismiss = { showSshConfigDialog = false },
+            onSave = { ip, port, user, password ->
+                Settings.ssh_ip = ip
+                Settings.ssh_port = port
+                Settings.ssh_user = user
+                Settings.ssh_password = password
+                showSshConfigDialog = false
+            }
+        )
+    }
 }
 
+// ================= 新增：SSH 配置的弹窗组件 =================
 @Composable
-private fun WorkingModeOption(title: String, description: String, selected: Boolean, onSelect: () -> Unit) {
-    SettingsCard(
-        title = { Text(title) },
-        description = { Text(description) },
-        startWidget = {
-            RadioButton(
-                modifier = Modifier.padding(start = 8.dp),
-                selected = selected,
-                onClick = onSelect
-            )
-        },
-        onClick = onSelect
-    )
-}
+fun SshConfigDialog(
+    onDismiss: () -> Unit,
+    onSave: (ip: String, port: String, user: String, password: String) -> Unit
+) {
+    var ip by remember { mutableStateOf(Settings.ssh_ip) }
+    var port by remember { mutableStateOf(Settings.ssh_port) }
+    var user by remember { mutableStateOf(Settings.ssh_user) }
+    var password by remember { mutableStateOf(Settings.ssh_password) }
 
-@Composable
-private fun InputModeOption(title: String, description: String, mode: Int, currentMode: Int, onSelect: (Int) -> Unit) {
-    SettingsCard(
-        title = { Text(title) },
-        description = { Text(description) },
-        startWidget = {
-            RadioButton(
-                modifier = Modifier.padding(start = 8.dp),
-                selected = currentMode == mode,
-                onClick = { onSelect(mode) }
-            )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("SSH-Alpine 连接配置") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = ip,
+                    onValueChange = { ip = it },
+                    label = { Text("IP 地址") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = port,
+                    onValueChange = { port = it },
+                    label = { Text("端口") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = user,
+                    onValueChange = { user = it },
+                    label = { Text("用户名") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("密码 (留空则无密码)") },
+                    visualTransformation = PasswordVisualTransformation(), // 隐藏密码
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
-        onClick = { onSelect(mode) }
-    )
-}
-
-@Composable
-private fun ExecModeOption(title: String, description: String, mode: ExecMode, currentMode: ExecMode?, onSelect: (ExecMode) -> Unit) {
-    SettingsCard(
-        title = { Text(title) },
-        description = { Text(description) },
-        startWidget = {
-            RadioButton(
-                modifier = Modifier.padding(start = 8.dp),
-                selected = currentMode == mode,
-                onClick = { onSelect(mode) }
-            )
+        confirmButton = {
+            TextButton(onClick = {
+                // 简单校验，防止极端情况导致脚本崩溃
+                if (ip.isNotBlank() && port.isNotBlank() && user.isNotBlank()) {
+                    onSave(ip.trim(), port.trim(), user.trim(), password) // 密码不trim，保留原样
+                }
+            }) { Text("保存") }
         },
-        onClick = { onSelect(mode) }
-    )
-}
-
-@Composable
-private fun LoginShellOption(title: String, description: String, mode: Int, currentMode: Int, onSelect: (Int) -> Unit) {
-    SettingsCard(
-        title = { Text(title) },
-        description = { Text(description) },
-        startWidget = {
-            RadioButton(
-                modifier = Modifier.padding(start = 8.dp),
-                selected = currentMode == mode,
-                onClick = { onSelect(mode) }
-            )
-        },
-        onClick = { onSelect(mode) }
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
     )
 }

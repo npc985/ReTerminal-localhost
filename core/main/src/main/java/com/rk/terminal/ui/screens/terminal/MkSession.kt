@@ -232,40 +232,47 @@ object MkSession {
     }
 
     fun buildSshAlpinePendingCommand(context: Context): PendingCommand {
-        // 1. 定义目录和文件
-        val configDir = File("/sdcard/ReTerminal")
-        val configFile = File(configDir, "ssh_alpine.conf")
-        
-        // 2. 如果目录不存在，创建目录
-        if (!configDir.exists()) {
-            configDir.mkdirs()
+        // 1. 从 Settings 中读取配置 (彻底抛弃不安全的 /sdcard 文件读取)
+        val ip = Settings.ssh_ip
+        val port = Settings.ssh_port
+        val user = Settings.ssh_user
+        val password = Settings.ssh_password
+
+        // 2. 输入安全过滤 (防止命令注入，例如用户输入 "22; rm -rf /")
+        val safeIp = ip.filter { it.isLetterOrDigit() || it == '.' || it == ':' || it == '-' }
+        val safePort = port.filter { it.isDigit() }
+        val safeUser = user.filter { it.isLetterOrDigit() || it == '_' || it == '-' || it == '.' }
+
+        // 3. 设定 known_hosts 路径（存储在 App 私有目录，避免中间人攻击）
+        val knownHostsFile = File(context.filesDir, "known_hosts")
+
+        // 4. 构建 SSH 基础参数
+        // 使用 accept-new 避免首次连接输入 yes，同时依然保留后续连接的主机密钥校验
+        val sshArgs = "-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${knownHostsFile.absolutePath}"
+
+        // 5. 组装命令
+        // 如果有密码，使用 sshpass -e 从环境变量读取，避免密码出现在 ps 命令行和磁盘中
+        val sshCommand = if (password.isNotEmpty()) {
+            "exec sshpass -e ssh $sshArgs $safeUser@$safeIp -p $safePort"
+        } else {
+            "exec ssh $sshArgs $safeUser@$safeIp -p $safePort"
         }
 
-        // 3. 如果配置文件不存在，自动生成默认文件
-        if (!configFile.exists()) {
-            configFile.writeText("ip=127.0.0.1\nport=22\nuser=root\n")
-        }
-
-        // 4. 读取配置
-        var ip = "127.0.0.1"
-        var port = "22"
-        var user = "root"
-        configFile.readLines().forEach { line ->
-            val trimmed = line.trim()
-            if (trimmed.startsWith("ip=")) ip = trimmed.substringAfter("=").trim()
-            if (trimmed.startsWith("port=")) port = trimmed.substringAfter("=").trim()
-            if (trimmed.startsWith("user=")) user = trimmed.substringAfter("=").trim()
-        }
-
-        // 5. 将命令写入一个专属的脚本文件，避开 -c 的解析 bug
+        // 6. 将命令写入专属的脚本文件，避开 -c 的解析 bug
         val scriptFile = File(context.filesDir, "ssh_alpine.sh")
-        scriptFile.writeText("exec ssh $user@$ip -p $port\n")
+        scriptFile.writeText("$sshCommand\n")
+
+        // 7. 准备环境变量，将密码传递给 sshpass
+        val envList = mutableListOf<String>()
+        if (password.isNotEmpty()) {
+            envList.add("SSHPASS=$password")
+        }
 
         return PendingCommand(
             shell = "/system/bin/sh",
             args = arrayOf(scriptFile.absolutePath),
             workingDir = context.filesDir.absolutePath, 
-            env = null
+            env = envList
         )
     }
 }
